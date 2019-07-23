@@ -1,3 +1,6 @@
 *.o
 micro
 *.bin
+asmc
+asms
+

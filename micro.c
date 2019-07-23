@@ -31,7 +31,7 @@ int main(int argc, char **argv)
   /* enter main loop */
   while (state->running) {
     exec_instr(regs, mem, state);
-    printf("--\nps: %2x flags: %d\n%2x %2x %2x %2x\n%2x %2x %2x %2x\n--\n", regs->ps, regs->fg, regs->ar, regs->br, regs->cr, regs->dr, regs->er, regs->fr, regs->gr, regs->hr);
+    //printf("--\nps: %2x flags: %d\n%2x %2x %2x %2x\n%2x %2x %2x %2x\n--\n", regs->ps, regs->fg, regs->ar, regs->br, regs->cr, regs->dr, regs->er, regs->fr, regs->gr, regs->hr);
   }
 
   if (state->error != 0) {
