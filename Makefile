@@ -15,13 +15,22 @@ $(PROG):$(OBJS)
 
 
 clean:
-	rm -f $(PROG) $(ASMS_PROG) $(OBJS)
+	rm -f $(PROG) $(ASMS_PROG) $(ASMC_PROG) $(OBJS)
 
 
+asm:$(ASMSPROG) $(ASMCPROG)
 
-ASMS_SRCS=asms.c
+ASMS_SRCS=asms.c asmhelper.c
 ASMS_OBJS=$(ASMS_SRCS:.c=.o)
 ASMS_PROG=asms
 
 $(ASMS_PROG):$(ASMS_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@
+
+
+ASMC_SRCS=asms.c asmhelper.c
+ASMC_OBJS=$(ASMC_SRCS:.c=.o)
+ASMC_PROG=asmc
+
+$(ASMC_PROG):$(ASMC_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
