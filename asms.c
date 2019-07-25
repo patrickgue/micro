@@ -7,8 +7,7 @@
 
 int main(int argc, char **argv)
 {
-  long input_file_size;
-  size_t input_file_size_actual;
+  long input_file_size, input_file_size_actual;
   char *buffer, *token_line, *token;
 
   FILE *input_file;
