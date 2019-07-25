@@ -6,11 +6,13 @@
 #include "asmhelper.h"
 #include "asmc.h"
 
-varstore *vars = malloc(0);
-int var_count = 0;
+varstore *vars;
+int var_count;
 
 int main(int argc, char **argv)
 {
+  init_globals();
+  
   long input_file_size, input_file_size_actual;
   char *buffer, *token_line, *token;
 
@@ -56,6 +58,11 @@ int main(int argc, char **argv)
   free(buffer);
 }
 
+void init_globals()
+{
+  vars = malloc(0);
+  var_count = 0;
+}
 
 void setvar(char *varname, byte value)
 {

@@ -12,6 +12,8 @@ struct s_varstore {
 
 typedef struct s_varstore varstore;
 
+void init_globals();
+
 void setvar(char *varname, byte value);
 byte getvar(char *varname);
 
