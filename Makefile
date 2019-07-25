@@ -28,7 +28,7 @@ $(ASMS_PROG):$(ASMS_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
 
 
-ASMC_SRCS=asms.c asmhelper.c
+ASMC_SRCS=asmc.c asmhelper.c
 ASMC_OBJS=$(ASMC_SRCS:.c=.o)
 ASMC_PROG=asmc
 
