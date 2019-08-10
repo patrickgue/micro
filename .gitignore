@@ -1,6 +1,6 @@
 *.o
 micro
 *.bin
-asmc
-asms
+asmc/asmc
+asms/asms
 
