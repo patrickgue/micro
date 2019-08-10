@@ -1,0 +1,7 @@
+str test "Hello World"
+print test
+var a 10
+print a
+str abc "abcdefgh"
+print abc
+end
