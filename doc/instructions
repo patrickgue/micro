@@ -1,0 +1,11 @@
+[Instruction Summary]
+
+b = byte = 8bit
+
++---------------------------+
+| b    | b    | b    | b    |
++---------------------------+
+| INTE | intr | value       |
+| MOVR | regs | value       |
+| MOVM | regs | mem addr    |
+| 
