@@ -21,6 +21,18 @@ void exec_instr(m_registers *regs, byte *mem, m_state *state)
   case MOVM:
     mem[value] = read_register(regs, code);
     break;
+  case ADDI:
+    addi(regs);
+    break;
+  case SUBT:
+    subt(regs);
+    break;
+  case MULT:
+    mult(regs);
+    break;
+  case DIVI:
+    divi(regs);
+    break;
   }
   
   regs->ps+=4;
@@ -50,21 +62,35 @@ void intr(byte code, uint16_t value, m_registers *regs, m_state *state, byte *me
 
 void addi(m_registers *regs)
 {
+  if( ((uint32_t) regs->ar) + ((uint32_t) regs->br) > 256 * 256) {
+    regs->fg = 0b10000000;
+  }
   regs->ar = regs->ar + regs->br;
 }
 
 void subt(m_registers *regs)
 {
-
+  if ( ((int32_t) regs->ar) - ((int32_t) regs->br) < 0) {
+    regs->fg = 0b00100000;
+  }
+  regs->ar = regs->ar - regs->br;
 }
 
 
 void mult(m_registers *regs)
 {
-
+  if ( ((uint32_t) regs->ar) * ((uint32_t) regs->br) > 256 * 256) {
+    regs->fg = 0b10000000;
+  }
+  regs->ar = regs->ar * regs->br;
 }
 
 void divi(m_registers *regs)
 {
-
+  if ( regs->br == 0 ) {
+    regs->fg = 0b01000000;
+  }
+  else {
+    regs->ar = regs->ar / regs->br;
+  }
 }
