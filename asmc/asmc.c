@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "asmc.h"
+#define DEBUG 1
 
 varstore **vars;
 int var_count;
@@ -19,10 +20,6 @@ int main(int argc, char **argv)
   FILE *input_file;
   FILE *output_file;
   
-  /*if(!init_file_pointers(&input_file, &output_file, argc, argv)) {
-    return 1;
-    }*/
-
   if(argc < 3) {
     printf("Not enough arguments\n");
     return 1;
@@ -88,11 +85,46 @@ int main(int argc, char **argv)
       fwrite(asms_line, sizeof(char), strlen(asms_line), output_file);
       free(asms_line);
     }
+    else if (strcmp(*token->instr, "str") == 0) {
+      int strsize = strlen(*token->arg2) - 1, i;
+      char *varname = malloc(64 * sizeof(char));
+      strcpy(varname, *token->arg1);
+      uint16_t memloc = setvar(varname, strsize);
+      uint8_t mem_lower = memloc & 0xff;
+      uint8_t mem_higher = memloc >> 8;
+      
+      for(i = 1; i < strsize; i++) {
+	asms_line = malloc(sizeof(char) * (2 * 5 * 4 + 1));
+	uint16_t number = (*token->arg2)[i];
+	uint8_t num_lower = number & 0xff;
+	uint8_t num_higher = number >> 8;
+	memloc++;
+	uint8_t mem_lower = memloc & 0xff;
+	uint8_t mem_higher = memloc >> 8;
+      
+	sprintf(asms_line, "0x%02x 0x%02x 0x%02x 0x%02x\n", MOVR, AR, num_lower, num_higher);
+	sprintf(asms_line, "%s0x%02x 0x%02x 0x%02x 0x%02x\n", asms_line, MOVM, AR, mem_lower, mem_higher);
+	fwrite(asms_line, sizeof(char), strlen(asms_line), output_file);
+	free(asms_line);
+      }
+    }
+    else if (strcmp(*token->instr, ";") == 0) {
+      // comment
+    }
   }
 
   fclose(output_file);
   free(tofree);
   free(buffer);
+
+  #ifdef DEBUG
+  int j;
+  for(j = 0; j < var_count; j++) {
+    printf("%-12s memloc: %02x size: %02x\n", vars[j]->varname, vars[j]->memory_location, vars[j]->size);
+  }
+  #endif
+  
+  return 0;
 }
 
 void init_globals()
@@ -140,9 +172,7 @@ instr_tokens *parse_instr_token(char *line)
   *tokens->instr = strdup(strsep(&buffer, " "));
   char *arg1tmpval = strsep(&buffer, " ");
   *tokens->arg1 = strdup(arg1tmpval ? arg1tmpval : "");
-  char *arg2tmpval = strsep(&buffer, " ");
-  *tokens->arg2 = strdup(arg2tmpval ? arg2tmpval : "");
+  *tokens->arg2 = strdup(buffer ? buffer : "");
   free(tofree);
-  free(buffer);
   return tokens;
 }
