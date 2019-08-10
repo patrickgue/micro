@@ -4,7 +4,7 @@ PROG=micro
 SRCS=micro.c ioi.c instr.c helper.c loader.c
 OBJS=$(SRCS:.c=.o)
 
-CFLAGS=
+CFLAGS=-g
 
 
 $(PROG):$(OBJS)
