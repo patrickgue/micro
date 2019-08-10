@@ -11,9 +11,6 @@ void exec_instr(m_registers *regs, byte *mem, m_state *state)
   byte code = mem[regs->ps + 1];
   uint16_t value = mem[regs->ps + 2]  + (mem[regs->ps + 3]) * 0x100;
   
-  //printf("%0x %2x %4x\n", instr, code, value);
-
-
   switch(instr) {
   case INTE: // Interput
     intr(code, value, regs, state, mem);
@@ -23,6 +20,7 @@ void exec_instr(m_registers *regs, byte *mem, m_state *state)
     break;
   case MOVM:
     mem[value] = read_register(regs, code);
+    break;
   }
   
   regs->ps+=4;
