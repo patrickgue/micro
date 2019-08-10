@@ -32,10 +32,10 @@ int main(int argc, char **argv)
   input_file_size_actual = fread (buffer, 1, input_file_size, input_file);
 
   while ((token_line = strsep(&buffer, "\n")) != NULL) {
-    printf("\n%s\n", token_line);
+    printf("%s\n", token_line);
     while ((token = strsep(&token_line, " ")) != NULL) {
       uint8_t intval = strtol(token, NULL, 16);
-      printf("%i ", intval);
+      //printf("%i ", intval);
       unsigned char charval = intval;
       fwrite(&charval,1,1, output_file);
     }
