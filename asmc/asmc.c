@@ -8,15 +8,17 @@
 
 varstore **vars;
 int var_count;
+label_store *labels;
+int label_count;
 uint16_t heap_offset;
 
 int main(int argc, char **argv)
 {
   init_globals();
   
-  long input_file_size, input_file_size_actual;
+  long input_file_size, input_file_size_actual, memory_position = 0;
   char *buffer, *token;
-
+  
   FILE *input_file;
   FILE *output_file;
   
@@ -60,6 +62,7 @@ int main(int argc, char **argv)
       sprintf(asms_line, "0x%02x 0x%02x 0x00 0x00", INTE, EXIT);
       fwrite(asms_line, sizeof(char), strlen(asms_line), output_file);
       free(asms_line);
+      memory_position += 4;
     }
     else if (strcmp(*token->instr, "print") == 0) {
       asms_line = malloc(3 * 5 * sizeof(char));
@@ -69,6 +72,7 @@ int main(int argc, char **argv)
       sprintf(asms_line, "%s0x%02x 0x%02x 0x%02x 0x%02x\n", asms_line, INTE, PRNT, 0, 0);
       fwrite(asms_line, sizeof(char), strlen(asms_line), output_file);
       free(asms_line);
+      memory_position += 4 * 3;
     }
     else if (strcmp(*token->instr, "var") == 0) {
       asms_line = malloc(2 * 5 * 4 * sizeof(char));
@@ -84,6 +88,7 @@ int main(int argc, char **argv)
       sprintf(asms_line, "%s0x%02x 0x%02x 0x%02x 0x%02x\n", asms_line, MOVM, AR, mem_lower, mem_higher);
       fwrite(asms_line, sizeof(char), strlen(asms_line), output_file);
       free(asms_line);
+      memory_position += 4 * 2;
     }
     else if (strcmp(*token->instr, "str") == 0) {
       int strsize = strlen(*token->arg2) - 1, i;
@@ -106,8 +111,27 @@ int main(int argc, char **argv)
 	sprintf(asms_line, "%s0x%02x 0x%02x 0x%02x 0x%02x\n", asms_line, MOVM, AR, mem_lower, mem_higher);
 	fwrite(asms_line, sizeof(char), strlen(asms_line), output_file);
 	free(asms_line);
+	memory_position += 4 * 2;
       }
     }
+    else if (strcmp(*token->instr, "label") == 0) {
+      addlabel(*token->arg1, memory_position);
+    }
+    else if (strcmp(*token->instr, "jump") == 0) {
+      asms_line = malloc(sizeof(char) * (5 * 4 + 1));
+      uint16_t memloc = getlabel(*token->arg1);
+      uint8_t mem_lower = memloc & 0xff;
+      uint8_t mem_higher = memloc >> 8;
+      sprintf(asms_line, "0x%02x 0x00 0x%02x 0x%02x\n", JUMP, mem_lower, mem_higher);
+      fwrite(asms_line, sizeof(char), strlen(asms_line), output_file);
+      free(asms_line);
+    }
+    /*else if (strcmp(*token->instr, "skipeqzero") == 0) {
+      asms_line = malloc(sizeof(char) * (5 * 4 + 1));
+      sprintf(asms_line, "0x%02x 0x00 0x%02x 0x%02x\n", );
+      fwrite(asms_line, sizeof(char), strlen(asms_line), output_file);
+      free(asms_line);
+      }*/
     else if (strcmp(*token->instr, ";") == 0) {
       // comment
     }
@@ -131,6 +155,8 @@ void init_globals()
 {
   vars = malloc(0);
   var_count = 0;
+  labels = malloc(0);
+  label_count = 0;
 }
 
 uint16_t setvar(char *varname, uint16_t size)
@@ -175,4 +201,24 @@ instr_tokens *parse_instr_token(char *line)
   *tokens->arg2 = strdup(buffer ? buffer : "");
   free(tofree);
   return tokens;
+}
+
+void addlabel(char *labelname, uint16_t location)
+{
+  label_count++;
+  labels = realloc(labels, sizeof(label_store) * (label_count + 1));
+  strcpy(labels[label_count].labelname, labelname);
+  labels[label_count].memory_location = location;
+}
+
+uint16_t getlabel(char *labelname)
+{
+  int i;
+  for (i = 0; i < label_count; i++) {
+    if (strcmp(labels[i].labelname, labelname) == 0) {
+      return labels[i].memory_location;
+    }
+  }
+  printf("Label %s not found\n");
+  return 0;
 }
