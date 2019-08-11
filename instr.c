@@ -33,6 +33,15 @@ void exec_instr(m_registers *regs, byte *mem, m_state *state)
   case DIVI:
     divi(regs);
     break;
+  case JUMP:
+    jump(regs, value);
+    break;
+  case SKZE:
+    skip_if_equal_zero(regs);
+    break;
+  case SKNZ:
+    skip_if_not_equal_zero(regs);
+    break;
   }
   
   regs->ps+=4;
@@ -92,5 +101,25 @@ void divi(m_registers *regs)
   }
   else {
     regs->ar = regs->ar / regs->br;
+  }
+}
+
+
+void jump(m_registers *regs, uint16_t value)
+{
+  regs->ps = value;
+}
+
+void skip_if_equal_zero(m_registers *regs)
+{
+  if (regs->ar == 0) {
+    regs->ps += 4;
+  }
+}
+
+void skip_if_not_equal_zero(m_registers *regs)
+{
+  if (regs->ar != 0) {
+    regs->ps += 4;
   }
 }

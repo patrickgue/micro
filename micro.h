@@ -51,6 +51,10 @@
 #define MULT 0x12 // multiply br and ar. save result to ar. possible overflow error
 #define DIVI 0x13 // devide register ar through br. possible zero through zero error
 
+#define JUMP 0x14 // jump to adress
+#define SKZE 0x15 // skip next line if ar is zero
+#define SKNZ 0x16 // skip next line if ar is not zero   
+
 /* interupts */
 #define EXIT 0x00 // halt machine
 #define PRNT 0x01 // print text at memory location stored in ar and size stored in br

@@ -13,4 +13,8 @@ void divi(m_registers *regs);
 
 void intr(byte code, uint16_t value, m_registers *regs, m_state *state, byte *memory);
 
+void jump(m_registers *regs, uint16_t value);
+void skip_if_equal_zero(m_registers *regs);
+void skip_if_not_equal_zero(m_registers *regs);
+
 #endif
