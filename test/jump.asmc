@@ -1,7 +1,7 @@
 str test "Hello World"
-var newline 10
-label lbl
-print test
-print newline
-jump lbl
+jump bla
+label test
 end
+label bla
+print test
+jump test
