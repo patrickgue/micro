@@ -9,6 +9,8 @@
 #include "instr.h"
 #include "loader.h"
 
+#define DEBUG 1
+
 int main(int argc, char **argv)
 {
 
@@ -37,6 +39,12 @@ int main(int argc, char **argv)
   if (state->error != 0) {
     printf("Ended with an error: %d\n", state->error);
   }
+
+  #ifdef DEBUG
+  FILE *f = fopen("/tmp/memory.bin", "wb");
+  fwrite(mem, sizeof(uint8_t), 256 * 256, f);
+  fclose(f);
+  #endif
   
   return 0;
 }
