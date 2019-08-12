@@ -7,6 +7,7 @@
 
 struct s_label_store {
   char labelname[64];
+  uint16_t reference_location;
   uint16_t memory_location;
 };
 
@@ -34,7 +35,7 @@ uint16_t setvar(char *varname, uint16_t size);
 varstore *getvar(char *varname);
 instr_tokens *parse_instr_token(char *line);
 
-void addlabel(char *labelname, uint16_t location);
+uint16_t addlabel(char *labelname, uint16_t location);
 uint16_t getlabel(char *labelname);
 
 #endif

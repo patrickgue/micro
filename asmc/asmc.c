@@ -10,7 +10,7 @@ varstore **vars;
 int var_count;
 label_store *labels;
 int label_count;
-uint16_t heap_offset;
+uint16_t heap_offset, label_offset;
 
 int main(int argc, char **argv)
 {
@@ -37,29 +37,27 @@ int main(int argc, char **argv)
 
 
   /* process file line by line */
-  char *line, *tofree;
+  char *line, *tofree, *asms_line;
   fseek (input_file , 0 , SEEK_END);
   input_file_size = ftell (input_file);
   rewind (input_file);
 
-  heap_offset = input_file_size * 4; //approximate heap offset. TODO: calculate actual offset
-  
+  // offsets: approximations. TODO: calculate actual offset
+  label_offset = input_file_size * 2;
+  heap_offset = label_offset + (256 * 4); // allow 0xff labels
+
   buffer = malloc(input_file_size);
   input_file_size_actual = fread (buffer, 1, input_file_size, input_file);
   fclose(input_file);
   
   tofree = strdup(buffer);
-
   
   while ((line = strsep(&buffer, "\n")) != NULL) {
-    char *asms_line;
-    
-
     instr_tokens *token = parse_instr_token(line);
     printf("%s | %s | %s\n",*token->instr, *token->arg1, *token->arg2);
     if(strcmp(*token->instr, "end") == 0) {
       asms_line = malloc(4 * 5 * sizeof(char));
-      sprintf(asms_line, "0x%02x 0x%02x 0x00 0x00", INTE, EXIT);
+      sprintf(asms_line, "0x%02x 0x%02x 0x00 0x00\n", INTE, EXIT);
       fwrite(asms_line, sizeof(char), strlen(asms_line), output_file);
       free(asms_line);
       memory_position += 4;
@@ -125,6 +123,7 @@ int main(int argc, char **argv)
       sprintf(asms_line, "0x%02x 0x00 0x%02x 0x%02x\n", JUMP, mem_lower, mem_higher);
       fwrite(asms_line, sizeof(char), strlen(asms_line), output_file);
       free(asms_line);
+      memory_position += 4;
     }
     /*else if (strcmp(*token->instr, "skipeqzero") == 0) {
       asms_line = malloc(sizeof(char) * (5 * 4 + 1));
@@ -135,6 +134,26 @@ int main(int argc, char **argv)
     else if (strcmp(*token->instr, ";") == 0) {
       // comment
     }
+  }
+
+  int label_index, to_offset_index;
+  for(to_offset_index = memory_position; to_offset_index < label_offset; to_offset_index += 4) {
+    asms_line = malloc(sizeof(char) * (5 * 4));
+    strcpy(asms_line, "0x00 0x00 0x00 0x00\n");
+    fwrite(asms_line, sizeof(char), strlen(asms_line), output_file);
+    free(asms_line);
+  }
+  for(label_index = 0; label_index < label_count; label_index++) {
+    asms_line = malloc(sizeof(char) * (5 * 4));
+    uint16_t memloc = labels[label_index].memory_location;
+    uint8_t mem_lower = memloc & 0xff;
+    uint8_t mem_higher = memloc >> 8;
+    sprintf(asms_line, "0x%02x 0x00 0x%02x 0x%02x\n", JUMP, mem_lower, mem_higher);
+    fwrite(asms_line, sizeof(char), strlen(asms_line), output_file);
+    free(asms_line);
+    #ifdef DEBUG
+    printf("Label %-12s: mem: 0x%04x ref: 0x%04x\n", labels[label_index].labelname, labels[label_index].memory_location, labels[label_index].reference_location);
+    #endif
   }
 
   fclose(output_file);
@@ -203,12 +222,22 @@ instr_tokens *parse_instr_token(char *line)
   return tokens;
 }
 
-void addlabel(char *labelname, uint16_t location)
+uint16_t addlabel(char *labelname, uint16_t location)
 {
-  label_count++;
+  /* if label was already used in jump instruction */
+  int i;
+  for (i = 0; i < label_count; i++) {
+    if (strcmp(labels[i].labelname, labelname) == 0) {
+      labels[i].memory_location = location;
+      return labels[i].reference_location;
+    }
+  }
+  /* if this is a new label to be jumped to in the future */
   labels = realloc(labels, sizeof(label_store) * (label_count + 1));
   strcpy(labels[label_count].labelname, labelname);
   labels[label_count].memory_location = location;
+  labels[label_count].reference_location = label_offset + (label_count -1) * 4 * sizeof(uint8_t) + 6;
+  return labels[label_count++].reference_location;
 }
 
 uint16_t getlabel(char *labelname)
@@ -216,9 +245,9 @@ uint16_t getlabel(char *labelname)
   int i;
   for (i = 0; i < label_count; i++) {
     if (strcmp(labels[i].labelname, labelname) == 0) {
-      return labels[i].memory_location;
+      return labels[i].reference_location;
     }
   }
-  printf("Label %s not found\n");
-  return 0;
+  /* if no label was found, add it */
+  return addlabel(labelname, 0x00);
 }
