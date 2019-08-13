@@ -1,7 +1,8 @@
-str test "Hello World"
-jump bla
-label test
+var a 0
+label lbl
+ifzero a
+jump add
 end
-label bla
-print test
-jump test
+label add
+addn a 1
+jump lbl

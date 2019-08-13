@@ -1,0 +1,11 @@
+var newline 10
+var counter 10
+var nr 1
+label loop
+muln nr 2
+addn nr 48
+print nr
+subn nr 48
+subn counter 1
+ifnzero counter
+jump loop

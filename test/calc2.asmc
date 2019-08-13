@@ -1,0 +1,9 @@
+var a 65
+var b 26
+label loop
+print a
+addn a 1
+subn b 1
+ifnzero b
+jump loop
+end
