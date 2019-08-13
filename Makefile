@@ -17,9 +17,16 @@ $(PROG):$(OBJS)
 	$(CC) $(CFLAGS) -c $^ -o $@
 
 
+install:$(PROG)
+	mkdir -p build
+	cp micro asm asmc/asmc asms/asms test/calc3.asmc build
+
+run:$(install)
+	build/asm test/calc3.asmc test/calc3.bin
+	build/micro test/calc3.bin
+
 clean:
-	rm -f $(PROG) $(OBJS)
+	rm -rf $(PROG) $(OBJS) build
 	make -C asmc clean
 	make -C asms clean
-
 
