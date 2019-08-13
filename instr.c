@@ -4,7 +4,6 @@
 
 #include <stdio.h>
 
-
 void exec_instr(m_registers *regs, byte *mem, m_state *state)
 {
   byte instr = mem[regs->ps];
@@ -20,6 +19,9 @@ void exec_instr(m_registers *regs, byte *mem, m_state *state)
     break;
   case MOVM:
     mem[value] = read_register(regs, code);
+    break;
+  case LOAD:
+    write_register(regs, code, mem[value]);
     break;
   case ADDI:
     addi(regs);
@@ -107,7 +109,7 @@ void divi(m_registers *regs)
 
 void jump(m_registers *regs, uint16_t value)
 {
-  regs->ps = value;
+  regs->ps = value - 4;
 }
 
 void skip_if_equal_zero(m_registers *regs)

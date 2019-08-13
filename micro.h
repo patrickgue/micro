@@ -45,6 +45,7 @@
 
 #define MOVR 0x01 // move 16bit value to register
 #define MOVM 0x02 // move value from register to memory
+#define LOAD 0x03 // move value from memory to register
 
 #define ADDI 0x10 // add register br to ar. save result to ar. possible overflow error
 #define SUBT 0x11 // subtract br from ar. save result to ar. possible subzero error
