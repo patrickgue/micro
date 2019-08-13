@@ -73,6 +73,8 @@ struct s_m_state {
   uint8_t error;
 };
 
+typedef struct s_m_registers m_registers;
+
 struct s_m_registers {
   uint16_t ps;
   uint16_t ar;
@@ -97,7 +99,6 @@ struct s_m_registers {
    */
 };
 
-typedef struct s_m_registers m_registers;
 typedef struct s_m_state m_state;
 
 typedef uint8_t byte;
