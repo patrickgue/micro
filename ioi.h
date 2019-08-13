@@ -3,7 +3,7 @@
 
 #include "micro.h"
 
-void print(m_registers*);
+void print(m_registers*, byte*);
 void keyboard(m_registers*);
 
 #endif

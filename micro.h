@@ -102,9 +102,6 @@ typedef struct s_m_state m_state;
 
 typedef uint8_t byte;
 
-uint16_t read_register(m_registers*, uint8_t);
-void write_register(m_registers*, uint8_t regi, uint16_t value);
-
 void init_regs(m_registers*);
 void init_state(m_state*);
 

@@ -1,7 +1,7 @@
 CC=clang
 
 PROG=micro
-SRCS=micro.c ioi.c instr.c helper.c loader.c
+SRCS=micro.c ioi.c instr.c helper.c loader.c registers.c
 OBJS=$(SRCS:.c=.o)
 
 CFLAGS=-g

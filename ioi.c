@@ -3,9 +3,12 @@
 #include "ioi.h"
 #include "micro.h"
 
-void print(m_registers *regs)
+void print(m_registers *regs, byte *mem)
 {
-  putchar(regs->ar);
+  int i;
+  for(i = regs->ar; i < regs->ar + regs->br; i++) {
+    putchar(mem[i]);
+  }
 }
 
 void keyboard(m_registers *regs)
