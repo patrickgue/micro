@@ -43,7 +43,7 @@ int main(int argc, char **argv)
   rewind (input_file);
 
   // offsets: approximations. TODO: calculate actual offset
-  label_offset = input_file_size * 2;
+  label_offset = (input_file_size * 2) - (input_file_size * 2) % 4;
   heap_offset = label_offset + (256 * 4); // allow 0xff labels
 
   buffer = malloc(input_file_size);
@@ -112,6 +112,73 @@ int main(int argc, char **argv)
 	memory_position += 4 * 2;
       }
     }
+    else if (strcmp(*token->instr, "addn") == 0 ||
+	     strcmp(*token->instr, "subn") == 0 ||
+	     strcmp(*token->instr, "muln") == 0 ||
+	     strcmp(*token->instr, "divn") == 0) {
+      uint8_t instruction;
+
+      if(strcmp(*token->instr, "addn") == 0) {
+	instruction = ADDI;
+      }
+      else if(strcmp(*token->instr, "subn") == 0) {
+	instruction = SUBT;
+      }
+      else if(strcmp(*token->instr, "muln") == 0) {
+	instruction = MULT;
+      }
+      else if(strcmp(*token->instr, "divn") == 0) {
+	instruction = DIVI;
+      }
+      asms_line = malloc(sizeof(char) * (4 * 5 * 4 + 1));
+      uint16_t memaddr = getvar(*token->arg1)->memory_location;
+      uint8_t mem_lower = memaddr & 0xff;
+      uint8_t mem_higher = memaddr >> 8;
+      uint16_t number = atoi(*token->arg2);
+      uint8_t num_lower = number & 0xff;
+      uint8_t num_higher = number >> 8;
+      sprintf(asms_line, "0x%02x 0x%02x 0x%02x 0x%02x\n", LOAD, AR, mem_lower, mem_higher);
+      sprintf(asms_line, "%s0x%02x 0x%02x 0x%02x 0x%02x\n", asms_line, MOVR, BR, num_lower, num_higher);
+      sprintf(asms_line, "%s0x%02x 0x00 0x00 0x00\n", asms_line, instruction);
+      sprintf(asms_line, "%s0x%02x 0x%02x 0x%02x 0x%02x\n", asms_line, MOVM, AR, mem_lower, mem_higher);
+      fwrite(asms_line, sizeof(char), strlen(asms_line), output_file);
+      free(asms_line);
+      memory_position += 4 * 4;
+    }
+    else if (strcmp(*token->instr, "addv") == 0 ||
+	     strcmp(*token->instr, "subv") == 0 ||
+	     strcmp(*token->instr, "mulv") == 0 ||
+	     strcmp(*token->instr, "divv") == 0) {
+      uint8_t instruction;
+
+      if(strcmp(*token->instr, "addv") == 0) {
+	instruction = ADDI;
+      }
+      else if(strcmp(*token->instr, "subv") == 0) {
+	instruction = SUBT;
+      }
+      else if(strcmp(*token->instr, "mulv") == 0) {
+	instruction = MULT;
+      }
+      else if(strcmp(*token->instr, "divv") == 0) {
+	instruction = DIVI;
+      }
+
+      asms_line = malloc(sizeof(char) * (4 * 5 * 4 + 1));
+      uint16_t memaddr1 = getvar(*token->arg1)->memory_location;
+      uint8_t mem1_lower = memaddr1 & 0xff;
+      uint8_t mem1_higher = memaddr1 >> 8;
+      uint16_t memaddr2 = getvar(*token->arg2)->memory_location;
+      uint8_t mem2_lower = memaddr2 & 0xff;
+      uint8_t mem2_higher = memaddr2 >> 8;
+      sprintf(asms_line, "0x%02x 0x%02x 0x%02x 0x%02x\n", LOAD, AR, mem1_lower, mem1_higher);  
+      sprintf(asms_line, "%s0x%02x 0x%02x 0x%02x 0x%02x\n", asms_line, LOAD, BR, mem2_lower, mem2_higher);
+      sprintf(asms_line, "%s0x%02x 0x00 0x00 0x00\n", asms_line, instruction);
+      sprintf(asms_line, "%s0x%02x 0x%02x 0x%02x 0x%02x\n", asms_line, MOVM, AR, mem1_lower, mem1_higher);  
+      fwrite(asms_line, sizeof(char), strlen(asms_line), output_file);
+      free(asms_line);
+      memory_position += 4 * 4;
+    }
     else if (strcmp(*token->instr, "label") == 0) {
       addlabel(*token->arg1, memory_position);
     }
@@ -125,12 +192,25 @@ int main(int argc, char **argv)
       free(asms_line);
       memory_position += 4;
     }
-    /*else if (strcmp(*token->instr, "skipeqzero") == 0) {
-      asms_line = malloc(sizeof(char) * (5 * 4 + 1));
-      sprintf(asms_line, "0x%02x 0x00 0x%02x 0x%02x\n", );
+    else if (strcmp(*token->instr, "ifzero") == 0 || strcmp(*token->instr, "ifnzero") == 0) {
+      uint8_t instruction;
+
+      if(strcmp(*token->instr, "ifzero") == 0) {
+	instruction = SKNZ;
+      }
+      else if(strcmp(*token->instr, "ifnzero")== 0) {
+	instruction = SKZE;
+      }
+      uint16_t memloc = getvar(*token->arg1)->memory_location;
+      uint8_t mem_lower = memloc & 0xff;
+      uint8_t mem_higher = memloc >> 8;
+      asms_line = malloc(sizeof(char) * (2 * 5 * 4 + 1));
+      sprintf(asms_line,   "0x%02x 0x%02x 0x%02x 0x%02x\n", LOAD, AR, mem_lower, mem_higher);
+      sprintf(asms_line, "%s0x%02x 0x00 0x00 0x00\n", asms_line, instruction);
       fwrite(asms_line, sizeof(char), strlen(asms_line), output_file);
       free(asms_line);
-      }*/
+      memory_position += 4 * 2;
+    }
     else if (strcmp(*token->instr, ";") == 0) {
       // comment
     }
@@ -236,7 +316,7 @@ uint16_t addlabel(char *labelname, uint16_t location)
   labels = realloc(labels, sizeof(label_store) * (label_count + 1));
   strcpy(labels[label_count].labelname, labelname);
   labels[label_count].memory_location = location;
-  labels[label_count].reference_location = label_offset + (label_count -1) * 4 * sizeof(uint8_t) + 6;
+  labels[label_count].reference_location = label_offset + ((label_count) * 4 * sizeof(uint8_t));
   return labels[label_count++].reference_location;
 }
 
