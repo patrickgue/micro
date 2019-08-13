@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 ASMC=$PWD/asmc/asmc
 ASMS=$PWD/asms/asms
