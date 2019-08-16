@@ -26,7 +26,7 @@ run:$(install)
 	build/micro test/calc3.bin
 
 clean:
-	rm -rf $(PROG) $(OBJS) build
+	rm -rf $(PROG) $(OBJS) build memory.bin
 	make -C asmc clean
 	make -C asms clean
 
