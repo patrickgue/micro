@@ -68,19 +68,36 @@ int main(int argc, char **argv)
     else if (strcmp(*token->instr, "print") == 0) {
       asms_line = malloc(3 * 5 * sizeof(char));
       varstore *var = getvar(*token->arg1);
-      sprintf(asms_line, asms_template, MOVR, AR, var->memory_location & 0xff, var->memory_location >> 8);
-      sprintf(asms_line, asms_template_add, asms_line, MOVR, BR, var->size & 0xff, var->size >> 8);
+      sprintf(asms_line, asms_template,
+	      MOVR,
+	      AR,
+	      split_word_bytes(var->memory_location).lower,
+	      split_word_bytes(var->memory_location).higher);
+      
+      sprintf(asms_line, asms_template_add, asms_line,
+	      MOVR,
+	      BR,
+	      split_word_bytes(var->size).lower,
+	      split_word_bytes(var->size).higher);
+      
       sprintf(asms_line, asms_template_add, asms_line, INTE, PRNT, 0, 0);
       fwrite(asms_line, sizeof(char), strlen(asms_line), output_file);
       free(asms_line);
       memory_position += 4 * 3;
     }
-    else if (strcmp(*token->instr, "var") == 0) {
+    else if (strcmp(*token->instr, "var") == 0 ||
+	     strcmp(*token->instr, "set") == 0) {
       asms_line = malloc(2 * 5 * 4 * sizeof(char));
+      uint16_t memloc;
       char *varname = malloc(64 * sizeof(char));
       strcpy(varname, *token->arg1);
       uint16_t number = atoi(*token->arg2);
-      uint16_t memloc = setvar(varname, 1);
+      if (strcmp(*token->instr, "var") == 0) {
+	memloc = setvar(varname, 1);
+      }
+      else if (strcmp(*token->instr, "set") == 0) {
+	memloc = getvar(varname)->memory_location;
+      }
       sprintf(asms_line, asms_template,
 	      MOVR,
 	      AR,
@@ -124,6 +141,50 @@ int main(int argc, char **argv)
 	free(asms_line);
 	memory_position += 4 * 2;
       }
+    }
+    else if (strcmp(*token->instr, "arr") == 0) {
+      char *varname = malloc(64 * sizeof(char));
+      int arrsize = 1, i;
+      for(i = 0; i < strlen(*token->arg2); i++) {
+	if ((*token->arg2)[i] == ',') {
+	  arrsize++;
+	}
+      }
+      strcpy(varname, *token->arg1);
+      uint16_t memloc = setvar(varname, arrsize);
+
+      char *array_string = strdup(*token->arg2), *number_str;
+      while( (number_str = strsep(&array_string, ",")) != NULL) {
+	asms_line = malloc(sizeof(char) * (2 * 5 * 4 + 1));
+	uint16_t number = atoi(number_str);
+	memloc++;
+      
+	sprintf(asms_line, asms_template,
+		MOVR,
+		AR,
+		split_word_bytes(number).lower,
+		split_word_bytes(number).higher);
+	
+	sprintf(asms_line, asms_template_add, asms_line,
+		MOVM,
+		AR,
+		split_word_bytes(memloc).lower,
+		split_word_bytes(memloc).higher);
+
+	fwrite(asms_line, sizeof(char), strlen(asms_line), output_file);
+	free(asms_line);
+	memory_position += 4 * 2;
+      }
+    }
+    else if (strcmp(*token->instr, "mem") == 0) {
+      asms_line = malloc(sizeof(char) * (2 * 5 * 4 + 1));
+      char *arg2 = strdup(*token->arg2);
+      char *varname = strdup(*token->arg1);
+      uint16_t location = strtol(strsep(&arg2, " "), NULL, 16);
+      uint16_t size = atol(strsep(&arg2, " "));      
+      uint16_t memloc = setvar_raw(varname, location, size);
+      free(asms_line);
+      free(arg2);
     }
     else if (strcmp(*token->instr, "addn") == 0 ||
 	     strcmp(*token->instr, "subn") == 0 ||
@@ -304,7 +365,9 @@ uint16_t setvar(char *varname, uint16_t size)
   uint16_t memloc;
   int i;
   for (i = 0; i < var_count; i++) {
-    memloc += vars[i]->size;
+    if(vars[i]->type == autom) {
+      memloc += vars[i]->size;
+    }
   }
 
   memloc += heap_offset;
@@ -314,8 +377,20 @@ uint16_t setvar(char *varname, uint16_t size)
   strcpy(vars[var_count]->varname, varname);
   vars[var_count]->memory_location = memloc;
   vars[var_count]->size = size;
+  vars[var_count]->type = autom;
   var_count++;
   return memloc;
+}
+
+uint16_t setvar_raw(char *varname, uint16_t location, uint16_t size) {
+  vars = realloc(vars, sizeof(varstore) * (var_count + 1));
+  vars[var_count] = (varstore*) malloc(sizeof(varstore));
+  strcpy(vars[var_count]->varname, varname);
+  vars[var_count]->memory_location = location;
+  vars[var_count]->size = size;
+  vars[var_count]->type = fixed;
+  var_count++;
+  return location;
 }
 
 varstore *getvar(char *varname)

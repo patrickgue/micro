@@ -13,10 +13,15 @@ struct s_label_store {
 
 typedef struct s_label_store label_store;
 
+enum e_vartype {autom = 0, fixed = 1};
+
+typedef enum e_vartype vartype;
+
 struct s_varstore {
   char varname[64];
   uint16_t memory_location;
   uint16_t size;
+  vartype type;
 };
 
 typedef struct s_varstore varstore;
@@ -39,6 +44,7 @@ typedef struct s_split_word split_word;
 void init_globals();
 
 uint16_t setvar(char *varname, uint16_t size);
+uint16_t setvar_raw(char *varname, uint16_t location, uint16_t size);
 varstore *getvar(char *varname);
 instr_tokens *parse_instr_token(char *line);
 
