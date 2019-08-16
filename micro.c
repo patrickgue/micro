@@ -64,10 +64,7 @@ void init_regs(m_registers* regs)
   regs->ar=0;
 }
 
-
 void init_state(m_state *state)
 {
   state->running = true;
 }
-
-
