@@ -1,7 +1,4 @@
-str test "Hello World"
+str test 10
+read test
 print test
-var a 10
-print a
-str abc "abcdefgh"
-print abc
 end
