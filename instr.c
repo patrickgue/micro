@@ -65,6 +65,9 @@ void intr(byte code, uint16_t value, m_registers *regs, m_state *state, byte *me
   case PRNT:
     print(regs, mem);
     break;
+  case READ:
+    read(regs, mem);
+    break;
   }
 }
 

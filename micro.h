@@ -62,6 +62,7 @@
 #define KYIN 0x02 // read text from keyboard, save at memory location stored in ar and size stored in br
 #define MEME 0x03 // memory error
 #define GENE 0x04 // 
+#define READ 0x05 // read from keyboard. store at address saved in ar with size br
 
 /* error codes */
 #define ERR_PROG_COUNT_OVERFLOW 1
