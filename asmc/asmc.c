@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "asmc.h"
 #define DEBUG 1
@@ -65,7 +66,17 @@ int main(int argc, char **argv)
       free(asms_line);
       memory_position += 4;
     }
-    else if (strcmp(*token->instr, "print") == 0) {
+    else if (strcmp(*token->instr, "print") == 0 || strcmp(*token->instr, "read") == 0) {
+      uint8_t instr;
+
+      if (strcmp(*token->instr, "print") == 0) {
+	instr = PRNT;
+      }
+      else if (strcmp(*token->instr, "read") == 0) {
+	instr = READ;
+      }
+
+      
       asms_line = malloc(3 * 5 * sizeof(char));
       varstore *var = getvar(*token->arg1);
       sprintf(asms_line, asms_template,
@@ -80,7 +91,7 @@ int main(int argc, char **argv)
 	      split_word_bytes(var->size).lower,
 	      split_word_bytes(var->size).higher);
       
-      sprintf(asms_line, asms_template_add, asms_line, INTE, PRNT, 0, 0);
+      sprintf(asms_line, asms_template_add, asms_line, INTE, instr, 0, 0);
       fwrite(asms_line, sizeof(char), strlen(asms_line), output_file);
       free(asms_line);
       memory_position += 4 * 3;
@@ -115,31 +126,44 @@ int main(int argc, char **argv)
       memory_position += 4 * 2;
     }
     else if (strcmp(*token->instr, "str") == 0) {
-      int strsize = strlen(*token->arg2) - 1, i;
       char *varname = malloc(64 * sizeof(char));
       strcpy(varname, *token->arg1);
-      uint16_t memloc = setvar(varname, strsize);
+      bool is_number = true;
       
-      for(i = 1; i < strsize; i++) {
-	asms_line = malloc(sizeof(char) * (2 * 5 * 4 + 1));
-	uint16_t number = (*token->arg2)[i];
-	memloc++;
-      
-	sprintf(asms_line, asms_template,
-		MOVR,
-		AR,
-		split_word_bytes(number).lower,
-		split_word_bytes(number).higher);
-	
-	sprintf(asms_line, asms_template_add, asms_line,
-		MOVM,
-		AR,
-		split_word_bytes(memloc).lower,
-		split_word_bytes(memloc).higher);
+      int strsize = strlen(*token->arg2) - 1, i;
 
-	fwrite(asms_line, sizeof(char), strlen(asms_line), output_file);
-	free(asms_line);
-	memory_position += 4 * 2;
+      for(i = 1; i < strsize; i++) {
+	if (!isnumber(*token->arg2[i]))
+	  is_number = false;
+      }
+
+      if (is_number) {
+	uint16_t memloc = setvar(varname, atoi(*token->arg2));
+      }
+      else {
+	uint16_t memloc = setvar(varname, strsize);
+      
+	for(i = 1; i < strsize; i++) {
+	  asms_line = malloc(sizeof(char) * (2 * 5 * 4 + 1));
+	  uint16_t number = (*token->arg2)[i];
+	  memloc++;
+      
+	  sprintf(asms_line, asms_template,
+		  MOVR,
+		  AR,
+		  split_word_bytes(number).lower,
+		  split_word_bytes(number).higher);
+	
+	  sprintf(asms_line, asms_template_add, asms_line,
+		  MOVM,
+		  AR,
+		  split_word_bytes(memloc).lower,
+		  split_word_bytes(memloc).higher);
+
+	  fwrite(asms_line, sizeof(char), strlen(asms_line), output_file);
+	  free(asms_line);
+	  memory_position += 4 * 2;
+	}
       }
     }
     else if (strcmp(*token->instr, "arr") == 0) {
@@ -212,7 +236,7 @@ int main(int argc, char **argv)
 	      split_word_bytes(number).lower,
 	      split_word_bytes(number).higher);
       
-      sprintf(asms_line, "%s0x%02x 0x00 0x00 0x00\n", asms_line,
+      sprintf(asms_line, asms_template_add, asms_line,
 	      instruction, 0, 0, 0);
       
       sprintf(asms_line, asms_template_add, asms_line,
