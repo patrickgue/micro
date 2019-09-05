@@ -43,6 +43,9 @@ typedef struct s_split_word split_word;
 
 void init_globals();
 
+/* reimplement non-standard BSD ctype function isnumber */
+bool is_number(char*);
+
 uint16_t setvar(char *varname, uint16_t size);
 uint16_t setvar_raw(char *varname, uint16_t location, uint16_t size);
 varstore *getvar(char *varname);
