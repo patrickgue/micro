@@ -128,16 +128,16 @@ int main(int argc, char **argv)
     else if (strcmp(*token->instr, "str") == 0) {
       char *varname = malloc(64 * sizeof(char));
       strcpy(varname, *token->arg1);
-      bool is_number = true;
+      bool is_nbr = true;
       
       int strsize = strlen(*token->arg2) - 1, i;
 
       for(i = 1; i < strsize; i++) {
 	if (!is_number(*token->arg2[i]))
-	  is_number = false;
+	  is_nbr = false;
       }
 
-      if (is_number) {
+      if (is_nbr) {
 	uint16_t memloc = setvar(varname, atoi(*token->arg2));
       }
       else {
