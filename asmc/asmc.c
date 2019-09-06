@@ -133,7 +133,7 @@ int main(int argc, char **argv)
       int strsize = strlen(*token->arg2) - 1, i;
 
       for(i = 1; i < strsize; i++) {
-	if (!is_number(*token->arg2[i]))
+	if (!isdigit(*token->arg2[i]))
 	  is_nbr = false;
       }
 
@@ -478,15 +478,4 @@ split_word split_word_bytes(uint16_t word)
   uint8_t higher = word >> 8;
   split_word split = {lower, higher};
   return split;
-}
-
-
-bool is_number(char *text) {
-  char c;
-  while ((c = *text++) != '\0') {
-    if (!isdigit(c)) {
-      return false;
-    }
-  }
-  return true;
 }
